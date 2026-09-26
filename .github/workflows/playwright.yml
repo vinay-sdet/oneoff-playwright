@@ -1,27 +1,16 @@
 name: Playwright validation
 
 on:
-  workflow_dispatch:
-    inputs:
-      expected_title:
-        description: Title expected in the browser page
-        required: true
-        default: First Project
-        type: string
-      expected_text:
-        description: Visible text expected on the page
-        required: true
-        default: Hello World
-        type: string
-      app_url:
-        description: URL of the app to test
-        required: true
-        default: http://localhost:8080
-        type: string
+  repository_dispatch:
+    types: [app_deployed]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      APP_URL: ${{ github.event.client_payload.app_url || 'http://localhost:8080' }}
+      EXPECTED_TITLE: ${{ github.event.client_payload.expected_title || 'First Project' }}
+      EXPECTED_TEXT: ${{ github.event.client_payload.expected_text || 'Hello World' }}
 
     steps:
       - name: Check out tests
@@ -39,10 +28,6 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
-        env:
-          APP_URL: ${{ inputs.app_url }}
-          EXPECTED_TITLE: ${{ inputs.expected_title }}
-          EXPECTED_TEXT: ${{ inputs.expected_text }}
         run: |
           npx playwright test --reporter=html
 
